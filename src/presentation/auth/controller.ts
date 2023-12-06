@@ -1,5 +1,5 @@
 import { Request, Response } from "express"
-import { AuthRepository, RegisterUserDto } from "../../domain";
+import { AuthRepository, CustomError, RegisterUserDto } from "../../domain";
 
 
 
@@ -9,6 +9,17 @@ export class AuthController {
     constructor(
         private readonly authRepository: AuthRepository,
     ) {}
+
+    // Metodo
+    private handleError = (error: unknown, res: Response) => {
+
+        if (error instanceof CustomError) {
+            return res.status(error.statusCode).json({error: error.message});
+        
+        }
+        console.log(error); // Se haria esta parte con winston
+        return res.status(500).json({error: 'Internal server error'});
+    }
 
     // Los controlladores van acacar llamando a casos de uso, como registrar un usario, logear un usuario, etc
 
@@ -21,7 +32,7 @@ export class AuthController {
 
         this.authRepository.register(registerUserDto!)
             .then(user => res.json(user))
-            .catch(error => res.status(500).json(error))
+            .catch(error => this.handleError(error, res));
     }
 
     // No recomiendan que sea asincrono
