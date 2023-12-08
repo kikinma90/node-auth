@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { AuthController } from "./controller";
 import { AuthDatasourceImpl, AuthRepositoryImpl } from "../../infrastructure";
+import { AuthMiddleware } from "../middlewares/auth.middleware";
 
 
 
@@ -23,6 +24,9 @@ export class AuthRoutes {
         router.post('/login', controller.loginUser)
 
         router.post('/register', controller.registerUser)
+
+        // El middleware o middlewares se ponen en el segundo parametro y se ejecuta antes que el controller
+        router.get('/', [AuthMiddleware.validateJWT], controller.getUsers)
 
         return router;
     }
