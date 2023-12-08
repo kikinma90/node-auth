@@ -1,6 +1,5 @@
 import { Request, Response } from "express"
-import { AuthRepository, CustomError, RegisterUserDto } from "../../domain";
-import { JwtAdapter } from "../../config";
+import { AuthRepository, CustomError, LoginUser, LoginUserDto, RegisterUser, RegisterUserDto } from "../../domain";
 import { UserModel } from "../../data/mongodb";
 
 
@@ -35,19 +34,31 @@ export class AuthController {
         // Delegamos la logica de negocio al caso de uso
         // Lo hacemos asi hasta la ultima seccion que lo modificaremos con los casos de uso.
         // Un parentesis con llave ({}) significa que lo que hay dentro es un objeto
-        this.authRepository.register(registerUserDto!)
-            .then(async (user) => {
-                res.json({
-                    user,
-                    token: await JwtAdapter.generateToken({id: user.id})
-                });
-            })
+        // this.authRepository.register(registerUserDto!)
+        //     .then(async (user) => {
+        //         res.json({
+        //             user,
+        //             token: await JwtAdapter.generateToken({id: user.id})
+        //         });
+        //     })
+        //     .catch(error => this.handleError(error, res));
+
+        // Ahora que hemos implementado nuestros casos de uso, llamamos a nuestros casos de uso
+        new RegisterUser(this.authRepository)
+            .execute(registerUserDto!)
+            .then(data => res.json(data))
             .catch(error => this.handleError(error, res));
     }
 
     // No recomiendan que sea asincrono
     loginUser = (req: Request, res: Response) => {
-        res.json('loginUser controller')
+        const [error, loginUserDto] = LoginUserDto.create(req.body);
+        if (error) return res.status(400).json({error});
+
+        new LoginUser(this.authRepository)
+            .execute(loginUserDto!)
+            .then(data => res.json(data))
+            .catch(error => this.handleError(error, res));
     }
 
     getUsers = (req: Request, res: Response) => {
